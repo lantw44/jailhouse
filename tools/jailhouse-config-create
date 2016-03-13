@@ -1037,6 +1037,9 @@ def get_cpu_vendor():
     global cpuvendor
     if cpuvendor is not None:
         return cpuvendor
+    if product[0] == 'QEMU':
+        cpuvendor = 'QEMU'
+        return cpuvendor
     with input_open('/proc/cpuinfo', 'r') as f:
         for line in f:
             if not line.strip():
@@ -1095,8 +1098,11 @@ vendor = get_cpu_vendor()
 if vendor == 'GenuineIntel':
     (iommu_units, extra_memregs) = parse_dmar(pcidevices, ioapics,
                                               dmar_regions)
-else:
+elif vendor == 'AuthenticAMD':
     (iommu_units, extra_memregs) = parse_ivrs(pcidevices, ioapics)
+elif vendor == 'QEMU':
+    (iommu_units, extra_memregs) = [ IOMMUConfig({
+        'base_addr': 0xfed90000, 'mmio_size': 0x1000}) ], []
 regions += extra_memregs
 
 # kernel does not have memmap region, pick one
